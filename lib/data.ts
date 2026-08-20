@@ -25,7 +25,25 @@ export async function notices(user: HubUser, includeArchived = false, query = ""
 }
 
 export async function noticeById(user: HubUser, id: string) { return (await visible(user, "notice", rows<RecordRow>(await db().execute({ sql: `SELECT n.*,u.full_name as authorName FROM notices n JOIN users u ON u.id=n.author_id WHERE n.id=?`, args: [id] }))))[0] ?? null; }
-export async function posts(user: HubUser, includeResolved = false, query = "") { const result=await db().execute({sql:`SELECT p.*,u.full_name as authorName,u.job_title as authorTitle,(SELECT count(*) FROM staff_replies r WHERE r.post_id=p.id) as replyCount FROM staff_posts p JOIN users u ON u.id=p.author_id WHERE (?=1 OR p.resolved=0) AND (?='' OR lower(p.title||' '||p.body||' '||p.post_type||' '||p.tags) LIKE '%'||lower(?)||'%') ORDER BY p.resolved ASC,p.created_at DESC`,args:[includeResolved?1:0,query,query]}); return visible(user,"staff_post",rows<RecordRow>(result)); }
+export type PostFilters = {
+  status?: "open" | "resolved" | "all";
+  postType?: string;
+  author?: "all" | "mine";
+  sort?: "newest" | "oldest" | "most-replies";
+};
+
+export async function posts(user: HubUser, includeResolved = false, query = "", filters: PostFilters = {}) {
+  const status = filters.status ?? (includeResolved ? "all" : "open");
+  const postType = filters.postType ?? "";
+  const author = filters.author ?? "all";
+  const sort = filters.sort ?? "newest";
+  const orderBy = sort === "oldest" ? "p.created_at ASC" : sort === "most-replies" ? "replyCount DESC,p.created_at DESC" : "p.created_at DESC";
+  const result = await db().execute({
+    sql: `SELECT p.*,u.full_name as authorName,u.job_title as authorTitle,(SELECT count(*) FROM staff_replies r WHERE r.post_id=p.id) as replyCount FROM staff_posts p JOIN users u ON u.id=p.author_id WHERE (?='all' OR (?='open' AND p.resolved=0) OR (?='resolved' AND p.resolved=1)) AND (?='' OR p.post_type=?) AND (?='all' OR p.author_id=?) AND (?='' OR lower(p.title||' '||p.body||' '||p.post_type||' '||p.tags||' '||u.full_name) LIKE '%'||lower(?)||'%') ORDER BY ${orderBy}`,
+    args: [status,status,status,postType,postType,author,user.id,query,query],
+  });
+  return visible(user,"staff_post",rows<RecordRow>(result));
+}
 export async function postById(user: HubUser,id:string){return (await visible(user,"staff_post",rows<RecordRow>(await db().execute({sql:`SELECT p.*,u.full_name as authorName,u.job_title as authorTitle FROM staff_posts p JOIN users u ON u.id=p.author_id WHERE p.id=?`,args:[id]}))))[0]??null;}
 export async function replies(postId:string){return rows<RecordRow>(await db().execute({sql:`SELECT r.*,u.full_name as authorName,u.job_title as authorTitle FROM staff_replies r JOIN users u ON u.id=r.author_id WHERE r.post_id=? ORDER BY r.created_at`,args:[postId]}));}
 export async function events(user:HubUser){const result=await db().execute(`SELECT e.*,u.full_name as organizerName FROM events e LEFT JOIN users u ON u.id=e.organizer_id WHERE e.end_at>=CURRENT_TIMESTAMP ORDER BY e.start_at`);return visible(user,"event",rows<RecordRow>(result));}
