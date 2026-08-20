@@ -1,0 +1,5 @@
+import { ArrowUpRight } from "lucide-react";
+import { Badge, EmptyState, PageHeader } from "@/components/app-shell";
+import { requireUser } from "@/lib/auth";
+import { quickLinks } from "@/lib/data";
+export default async function LinksPage(){const user=await requireUser();const items=await quickLinks(user);const categories=Map.groupBy(items,(x)=>String(x.category));return <><PageHeader eyebrow="SHORTCUTS" title="Quick Links" description="Frequently used school systems, forms and resources."/>{[...categories.entries()].map(([category,links])=><section key={category} className="link-section"><h2>{category}</h2><div className="link-grid">{links.map((link)=><a href={String(link.url)} target="_blank" rel="noreferrer" className="surface link-card" key={link.id}><span className="link-icon">{String(link.label).slice(0,1)}</span><div><h3>{link.label}</h3><p>{link.description}</p><Badge>{link.category}</Badge></div><ArrowUpRight size={17}/></a>)}</div></section>)}{items.length===0&&<EmptyState title="No links available" description="An administrator can add curated staff links."/>}</>}

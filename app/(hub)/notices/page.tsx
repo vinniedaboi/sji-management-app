@@ -1,0 +1,8 @@
+import Link from "next/link";
+import { Archive, ChevronRight, Search } from "lucide-react";
+import { Badge, EmptyState, PageHeader } from "@/components/app-shell";
+import { requireUser } from "@/lib/auth";
+import { notices } from "@/lib/data";
+import { prettyDateTime, snippet } from "@/lib/format";
+
+export default async function NoticesPage({searchParams}:{searchParams:Promise<{q?:string;archived?:string}>}){const user=await requireUser();const params=await searchParams;const items=await notices(user,params.archived==="1",params.q??"");return <><PageHeader eyebrow="OFFICIAL BULLETIN" title="Notices" description="Authoritative school updates, targeted to you."/><form className="filter-bar"><label><Search size={16}/><input name="q" defaultValue={params.q} placeholder="Search notices"/></label><label className="check"><input type="checkbox" name="archived" value="1" defaultChecked={params.archived==="1"}/>Include archive</label><button className="button button-secondary">Apply</button></form><section className="content-list">{items.map((item)=><Link className={`content-row priority-edge-${item.priority}`} href={`/notices/${item.id}`} key={item.id}><div className="content-row-main"><div className="item-meta"><Badge tone={item.priority==="critical"?"critical":item.priority==="important"?"important":"neutral"}>{item.priority}</Badge><Badge>{item.category}</Badge>{item.status==="archived"&&<Badge><Archive size={11}/>Archived</Badge>}</div><h2>{item.title}</h2><p>{snippet(String(item.body),190)}</p><small>{item.authorName} · {prettyDateTime(String(item.publish_at))}</small></div><ChevronRight size={18}/></Link>)}{items.length===0&&<EmptyState title="No notices found" description="Try changing your search or archive filter."/>}</section></>}
