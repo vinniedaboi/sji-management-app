@@ -1,6 +1,6 @@
-# School Staff Hub
+# SJI International Staff Hub
 
-A local-first, Vercel-adaptable MVP for the school staff homepage described in `School_Staff_Hub_MVP_Specification.docx`. It combines a targeted official bulletin, teacher community board, events, documents/SOPs, quick links, staff directory, global search, acknowledgements, notifications, and administration.
+A local-first, Vercel-adaptable staff homepage branded for St. Joseph's Institution International and built from `School_Staff_Hub_MVP_Specification.docx`. It combines a targeted official bulletin, teacher community board, events, documents/SOPs, quick links, staff directory, global search, acknowledgements, notifications, and administration.
 
 ## Run locally
 

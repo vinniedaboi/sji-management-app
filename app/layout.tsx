@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "School Staff Hub",
-  description: "The daily operations hub for school staff.",
+  title: "SJI International Staff Hub",
+  description: "The daily staff operations hub for St. Joseph's Institution International.",
 };
 
 export default function RootLayout({
