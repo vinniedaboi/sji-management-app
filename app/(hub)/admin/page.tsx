@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle2, FileText, History, Settings2, Users } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, ClipboardCheck, FileText, History, Settings2, Users } from "lucide-react";
 import { PageHeader } from "@/components/app-shell";
 const areas=[
   ["Official notices","Publish, schedule and archive the official bulletin.","/admin/notices",FileText],
+  ["Cover management","Coordinate absences, applications and daily assignments.","/cover",ClipboardCheck],
   ["Content library","Manage events, documents and Quick Links.","/admin/content",BookOpen],
   ["Acknowledgements","Review completion and outstanding staff.","/admin/acknowledgements",CheckCircle2],
   ["Users & departments","Manage roles, departments and account status.","/admin/users",Users],

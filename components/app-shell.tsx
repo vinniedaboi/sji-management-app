@@ -3,14 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Bell, BookOpen, CalendarDays, ExternalLink, FileText, Home, LayoutDashboard, LogOut, Menu, MessageSquare, Search, ShieldCheck, Users, X } from "lucide-react";
+import { Bell, BookOpen, CalendarDays, ClipboardCheck, ExternalLink, FileText, Home, LayoutDashboard, LogOut, Menu, MessageSquare, Search, ShieldCheck, Users, X } from "lucide-react";
 import { useState } from "react";
 import type { HubUser } from "@/lib/types";
 import { initials, schoolLogoUrl, schoolName } from "@/lib/format";
 import { isAdmin } from "@/lib/types";
 
 const nav=[
-  ["/", "Home", Home], ["/notices","Notices",FileText], ["/staff-board","Staff Board",MessageSquare], ["/events","Events",CalendarDays], ["/documents","Documents",BookOpen], ["/links","Quick Links",ExternalLink], ["/directory","Directory",Users],
+  ["/", "Home", Home], ["/notices","Notices",FileText], ["/cover","Cover",ClipboardCheck], ["/staff-board","Staff Board",MessageSquare], ["/events","Events",CalendarDays], ["/documents","Documents",BookOpen], ["/links","Quick Links",ExternalLink], ["/directory","Directory",Users],
 ] as const;
 
 export function AppShell({user,children}:{user:HubUser;children:React.ReactNode}){

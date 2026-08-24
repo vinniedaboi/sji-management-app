@@ -1,6 +1,8 @@
 # SJI International Staff Hub
 
-A local-first, Vercel-adaptable staff homepage branded for St. Joseph's Institution International and built from `School_Staff_Hub_MVP_Specification.docx`. It combines a targeted official bulletin, teacher community board, events, documents/SOPs, quick links, staff directory, global search, acknowledgements, notifications, and administration.
+A local-first, Vercel-adaptable staff homepage branded for St. Joseph's Institution International and built from `School_Staff_Hub_MVP_Specification.docx`. It combines a targeted official bulletin, daily cover management, teacher community board, events, documents/SOPs, quick links, staff directory, global search, acknowledgements, notifications, and administration.
+
+The Cover workspace tracks staff absences and lesson-level requirements across Periods 1–8. Teachers can volunteer for open cover, coordinators can approve applications or assign colleagues directly, and the board prevents absence, assignment, and same-period application conflicts. Cover coordinators can publish the selected day as a Markdown table in the official notices feed. Notice bodies support GitHub-flavoured Markdown, including headings, lists, links, blockquotes, and tables.
 
 ## Run locally
 

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 const client=createClient({url:process.env.DATABASE_URL??"file:./data/school-staff-hub.db",authToken:process.env.DATABASE_AUTH_TOKEN||undefined});
 const stamp=(date:Date)=>date.toISOString().replace("T"," ").slice(0,19);
 const at=(days:number,hour=9)=>{const d=new Date();d.setDate(d.getDate()+days);d.setHours(hour,0,0,0);return stamp(d)};
+const day=(days:number)=>at(days).slice(0,10);
 const id=()=>crypto.randomUUID();
 const passwordHash=await bcrypt.hash("SchoolHub123!",10);
 
@@ -27,14 +28,37 @@ const users=[
   ["usr-principal","maria.santos@school.test","Maria Santos","admin","dep-admin","Principal"],
 ];
 
-const clear=["audit_logs","dismissals","notifications","acknowledgements","audiences","staff_replies","staff_posts","events","documents","quick_links","notices","users","departments"];
+const clear=["audit_logs","dismissals","notifications","acknowledgements","audiences","cover_applications","cover_slots","absences","staff_replies","staff_posts","events","documents","quick_links","notices","users","departments"];
 for(const table of clear) await client.execute(`DELETE FROM ${table}`);
 for(const [depId,name] of departments) await client.execute({sql:`INSERT INTO departments(id,name) VALUES (?,?)`,args:[depId,name]});
 for(const [userId,email,name,role,departmentId,title] of users) await client.execute({sql:`INSERT INTO users(id,email,password_hash,full_name,role,department_id,job_title,phone) VALUES (?,?,?,?,?,?,?,?)`,args:[userId,email,passwordHash,name,role,departmentId,title,role==="admin"?"+65 6123 4000":null]});
 
+const absenceRows=[
+  ["absence-amir-today","usr-amir",day(0),day(0),"Medical leave","Cover required for morning PE lessons","usr-office"],
+  ["absence-sofia-today","usr-sofia",day(0),day(0),"Professional learning","Off-site curriculum workshop","usr-admin"],
+  ["absence-noah-tomorrow","usr-noah",day(1),day(1),"Family leave","Approved personal leave","usr-admin"],
+];
+for(const absence of absenceRows) await client.execute({sql:`INSERT INTO absences(id,staff_id,start_date,end_date,absence_type,notes,reported_by) VALUES (?,?,?,?,?,?,?)`,args:absence});
+
+const coverRows=[
+  ["cover-pe-p1","absence-amir-today",day(0),1,"7A","Physical Education","Sports Hall","Take attendance, then follow the athletics station plan.","open",null,null,null],
+  ["cover-eng-p2","absence-sofia-today",day(0),2,"9E","English","B2-14","Students should complete the comparative paragraph in Teams.","open",null,null,null],
+  ["cover-pe-p3","absence-amir-today",day(0),3,"8C","Physical Education","Main Field","Lead the football skills circuit. Equipment is in Store 2.","assigned","usr-jaya","usr-office",at(0,7)],
+  ["cover-eng-p5","absence-sofia-today",day(0),5,"10B","English","B2-14","Continue Act 2 reading and collect exit tickets.","open",null,null,null],
+  ["cover-math-p2","absence-noah-tomorrow",day(1),2,"8A","Mathematics","C3-06","Worksheet 4.2 is on the teacher desk.","open",null,null,null],
+];
+for(const slot of coverRows) await client.execute({sql:`INSERT INTO cover_slots(id,absence_id,cover_date,period,class_name,subject,room,instructions,status,assigned_user_id,assigned_by,assigned_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,args:slot});
+
+const coverApplications=[
+  ["application-emma-pe1","cover-pe-p1","usr-emma","I am free Period 1 and can take the sports hall group.","pending",null,null],
+  ["application-liam-eng2","cover-eng-p2","usr-liam","I can cover before my Languages lesson.","pending",null,null],
+  ["application-jaya-pe3","cover-pe-p3","usr-jaya","Available and happy to cover.","approved","usr-office",at(0,7)],
+];
+for(const application of coverApplications) await client.execute({sql:`INSERT INTO cover_applications(id,cover_slot_id,applicant_id,note,status,decided_by,decided_at) VALUES (?,?,?,?,?,?,?)`,args:application});
+
 const noticeRows=[
   ["notice-fire","Fire drill at 10:40 today","Please review the revised muster point map before morning break. At the alarm, escort your class to the east field and take the red register pack.","Emergency / safety","critical",at(-1),at(1),1,"usr-admin","published"],
-  ["notice-cover","Staff away and cover notes","Mr Rahman is away today. Period 3 Year 8 PE will meet in the sports hall with Ms Patel.","Staff absence","important",at(-1),at(1),0,"usr-admin","published"],
+  ["notice-cover","Staff away and cover notes","## Today's cover arrangements\n\nPlease check the room and lesson notes on the **Cover Board** before the period begins.\n\n| Period | Absent colleague | Class | Room | Cover |\n| ---: | --- | --- | --- | --- |\n| 1 | Amir Rahman | 7A PE | Sports Hall | **Cover needed** |\n| 2 | Sofia Garcia | 9E English | B2-14 | **Cover needed** |\n| 3 | Amir Rahman | 8C PE | Main Field | Jaya Patel |\n\n> Teachers who are free may apply directly from the Cover Board.","Cover / room change","important",at(-1),at(1),0,"usr-admin","published"],
   ["notice-activity","Year 9 geography fieldwork","Students in 9A and 9B will be off campus from 08:30 to 14:30 for coastal fieldwork.","Student activity / off-campus","normal",at(-2),at(1),0,"usr-admin","published"],
   ["notice-policy","Updated safeguarding policy","The annual safeguarding policy has been updated. All staff must read and acknowledge the revision by Friday.","Policy / SOP update","important",at(-3),at(7),1,"usr-admin","published"],
   ["notice-exams","Exam access arrangements due","Submit confirmed access arrangements to the examinations office by 15:20 today.","Academic / exams","important",at(-2),at(1),0,"usr-hod-science","published"],
@@ -117,6 +141,6 @@ for(const [entityType,entityId,audienceType,audienceValue] of audienceRows) awai
 for(const user of users){
   await client.execute({sql:`INSERT INTO notifications(id,user_id,type,entity_type,entity_id,title) VALUES (?,?,?,?,?,?)`,args:[id(),user[0],"critical_notice","notice","notice-fire","Critical notice: Fire drill at 10:40 today"]});
 }
-console.log(`Seeded ${users.length} users, ${noticeRows.length} notices, ${postRows.length} posts, ${eventRows.length} events, ${docs.length} documents and ${links.length} quick links.`);
+console.log(`Seeded ${users.length} users, ${noticeRows.length} notices, ${postRows.length} posts, ${coverRows.length} cover slots, ${eventRows.length} events, ${docs.length} documents and ${links.length} quick links.`);
 console.log("Demo password for every account: SchoolHub123!");
 client.close();
