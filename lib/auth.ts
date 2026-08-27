@@ -5,7 +5,15 @@ import { db, rows } from "@/lib/db";
 import type { HubUser, Role } from "@/lib/types";
 
 const COOKIE = "school-hub-session";
-const secret = () => new TextEncoder().encode(process.env.AUTH_SECRET ?? "local-school-hub-development-secret-change-me");
+const DEV_SECRET = "local-school-hub-development-secret-change-me";
+
+function secret() {
+  const value = process.env.AUTH_SECRET;
+  if (process.env.VERCEL && (!value || value.length < 16)) {
+    throw new Error("AUTH_SECRET must be set to a long random string in the Vercel project settings before deploying.");
+  }
+  return new TextEncoder().encode(value ?? DEV_SECRET);
+}
 
 export async function createSession(userId: string) {
   const token = await new SignJWT({ userId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("12h").sign(secret());

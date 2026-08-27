@@ -51,7 +51,7 @@ export type CoverApplicationRow = {
 
 export async function coverBoard(date: string, userId: string, period = 0, status = "all") {
   const result = await db().execute({
-    sql: `SELECT s.id,s.absence_id as absenceId,s.cover_date as coverDate,s.period,s.class_name as className,s.subject,s.room,s.instructions,s.status,a.staff_id as absentStaffId,absent.full_name as absentStaffName,absent.job_title as absentJobTitle,absent.department_id as departmentId,d.name as departmentName,s.assigned_user_id as assignedUserId,cover.full_name as assignedUserName,(SELECT count(*) FROM cover_applications ca WHERE ca.cover_slot_id=s.id AND ca.status='pending') as pendingApplicationCount,(SELECT ca.id FROM cover_applications ca WHERE ca.cover_slot_id=s.id AND ca.applicant_id=? LIMIT 1) as myApplicationId,(SELECT ca.status FROM cover_applications ca WHERE ca.cover_slot_id=s.id AND ca.applicant_id=? LIMIT 1) as myApplicationStatus FROM cover_slots s JOIN absences a ON a.id=s.absence_id JOIN users absent ON absent.id=a.staff_id LEFT JOIN departments d ON d.id=absent.department_id LEFT JOIN users cover ON cover.id=s.assigned_user_id WHERE s.cover_date=? AND a.status='confirmed' AND (?=0 OR s.period=?) AND (?='all' OR s.status=?) ORDER BY s.period,absent.full_name,s.class_name`,
+    sql: `SELECT s.id,s.absence_id as absenceId,s.cover_date as coverDate,s.period,s.class_name as className,s.subject,s.room,s.instructions,s.status,a.staff_id as absentStaffId,absent.full_name as absentStaffName,absent.job_title as absentJobTitle,absent.department_id as departmentId,d.name as departmentName,s.assigned_user_id as assignedUserId,cover.full_name as assignedUserName,(SELECT count(*) FROM cover_applications ca WHERE ca.cover_slot_id=s.id AND ca.status='pending') as pendingApplicationCount,(SELECT ca.id FROM cover_applications ca WHERE ca.cover_slot_id=s.id AND ca.applicant_id=? LIMIT 1) as myApplicationId,(SELECT ca.status FROM cover_applications ca WHERE ca.cover_slot_id=s.id AND ca.applicant_id=? LIMIT 1) as myApplicationStatus FROM cover_slots s JOIN absences a ON a.id=s.absence_id JOIN users absent ON absent.id=a.staff_id LEFT JOIN departments d ON d.id=absent.department_id LEFT JOIN users cover ON cover.id=s.assigned_user_id WHERE s.cover_date=? AND a.status='confirmed' AND (?::int=0 OR s.period=?) AND (?::text='all' OR s.status=?) ORDER BY s.period,absent.full_name,s.class_name`,
     args: [userId,userId,date,period,period,status,status],
   });
   return rows<CoverRow>(result);
@@ -80,7 +80,7 @@ export async function availableCoverStaff(date: string) {
 
 export async function manageableAbsences(date: string, departmentId: string | null, unrestricted: boolean) {
   const result = await db().execute({
-    sql: `SELECT a.id,u.full_name as staffName,a.start_date as startDate,a.end_date as endDate FROM absences a JOIN users u ON u.id=a.staff_id WHERE a.status='confirmed' AND a.start_date<=? AND a.end_date>=? AND (?=1 OR u.department_id=?) ORDER BY u.full_name`,
+    sql: `SELECT a.id,u.full_name as staffName,a.start_date as startDate,a.end_date as endDate FROM absences a JOIN users u ON u.id=a.staff_id WHERE a.status='confirmed' AND a.start_date<=? AND a.end_date>=? AND (?::int=1 OR u.department_id=?) ORDER BY u.full_name`,
     args: [date,date,unrestricted?1:0,departmentId],
   });
   return rows<{id:string;staffName:string;startDate:string;endDate:string}>(result);

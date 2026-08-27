@@ -83,7 +83,7 @@ export default async function CoverPage({
     manager ? manageableAbsences(date, user.departmentId, unrestricted) : Promise.resolve([]),
     manager
       ? db().execute({
-          sql: `SELECT u.id,u.full_name as fullName,u.job_title as jobTitle FROM users u WHERE u.active=1 AND u.role IN ('teacher','department_head') AND (?=1 OR u.department_id=?) ORDER BY u.full_name`,
+          sql: `SELECT u.id,u.full_name as fullName,u.job_title as jobTitle FROM users u WHERE u.active=1 AND u.role IN ('teacher','department_head') AND (?::int=1 OR u.department_id=?) ORDER BY u.full_name`,
           args: [unrestricted ? 1 : 0, user.departmentId],
         }).then((result) => rows<{ id: string; fullName: string; jobTitle: string }>(result))
       : Promise.resolve([]),
